@@ -58,6 +58,8 @@ include(cmake/CompilerWarnings.cmake)
 add_executable(${PROJECT_NAME} myrls/src/main.cpp
         myrls/src/options_parser.cpp myrls/include/options_parser.h)
 
+add_executable(nftw_ex examples/nftw_ex.cpp)
+
 #! Put path to your project headers
 target_include_directories(${PROJECT_NAME} PRIVATE myrls/include)
 
