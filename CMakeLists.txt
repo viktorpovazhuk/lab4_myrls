@@ -56,7 +56,8 @@ include(cmake/CompilerWarnings.cmake)
 
 #! Project main executable source compilation
 add_executable(${PROJECT_NAME} myrls/src/main.cpp
-        myrls/src/options_parser.cpp myrls/include/options_parser.h)
+        myrls/src/options_parser.cpp myrls/include/options_parser.h
+        myrls/include/file_info.h)
 
 add_executable(nftw_ex examples/nftw_ex.cpp)
 
