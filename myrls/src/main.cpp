@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <string>
 #include <dirent.h>
 #include <stack>
@@ -17,6 +18,35 @@
 file_info get_file_info(const std::string &path, const struct stat *stat) {
     file_info info;
 
+}
+
+std::string get_permissions(const mode_t &st_permissions) {
+    std::string permissions;
+    permissions += (st_permissions & S_IRUSR) ? 'r' : '-';
+    permissions += (st_permissions & S_IWUSR) ? 'r' : '-';
+    permissions += (st_permissions & S_IXUSR) ? 'x' : '-';
+    permissions += (st_permissions & S_IRGRP) ? 'r' : '-';
+    permissions += (st_permissions & S_IWGRP) ? 'w' : '-';
+    permissions += (st_permissions & S_IXGRP) ? 'x' : '-';
+    permissions += (st_permissions & S_IROTH) ? 'r' : '-';
+    permissions += (st_permissions & S_IWOTH) ? 'w' : '-';
+    permissions += (st_permissions & S_IXOTH) ? 'x' : '-';
+
+    return permissions;
+}
+
+std::string get_owner(const uid_t &uid) {
+    struct passwd *pw;
+    std::string owner;
+    pw = getpwuid(uid);
+    if (pw) {
+        owner = pw->pw_name;
+    }
+    else {
+        owner = std::to_string(uid);
+    }
+
+    return owner;
 }
 
 int main(int argc, char* argv[]) {
@@ -42,11 +72,23 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 
+            struct dirent *entry = entries[i];
+            std::string path = cur_dir + "/" + std::string(entry->d_name);
+            struct stat entry_stat{};
+            stat(path.c_str(), &entry_stat);
+
+            file_info info;
+            info.path = path;
+            info.filename = entry->d_name;
+            info.permissions = get_permissions(entry_stat.st_mode);
+            info.owner = get_owner(entry_stat.st_uid);
+
             if (entries[i]->d_type == DT_DIR) {
                 subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
             }
 
-            std::cout << entries[i]->d_name << '\n';
+            printf("%s %10s %15s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str());
+
             free(entries[i]);
         }
         free(entries);

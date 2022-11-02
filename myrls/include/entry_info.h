@@ -11,7 +11,7 @@
 struct file_info {
     std::string path;
 
-    std::string rights;
+    std::string permissions;
     std::string owner;
     std::size_t size;
     std::string modification_date;
