@@ -31,6 +31,12 @@ enum Errors {
 
 };
 
+struct both_slashes {
+    bool operator()(char a, char b) const {
+        return a == '/' && b == '/';
+    }
+};
+
 std::string get_permissions(const mode_t &st_permissions) {
     std::string permissions;
     permissions += (st_permissions & S_IRUSR) ? 'r' : '-';
@@ -95,7 +101,7 @@ file_info get_file_info(const std::string &path) {
         spec_symb = "";
     else
         spec_symb = "?";
-    info.filename = spec_symb + std::string(std::filesystem::path(path).filename());
+    info.filename = spec_symb + std::string(basename(strdup(path.c_str())));
 
     if (spec_symb == "@") {
         char symlink_path[PATH_MAX];
@@ -150,11 +156,17 @@ int main(int argc, char* argv[]) {
     }
     std::string parent_dir;
     if (argc == 1)
-        parent_dir = ".";
+        parent_dir = "./";
     else
         parent_dir = command_line_options.get_pathname();
 
-    if (!std::filesystem::is_directory(parent_dir)) {
+    struct stat st;
+    if (stat(parent_dir.c_str(), &st) == -1){
+        std::cerr << "Error accessing initial path " << parent_dir << std::endl;
+        EXIT_CODE = EWRPATH;
+        return EXIT_CODE;
+    }
+    if (!S_ISDIR(st.st_mode)) {
         file_info info = get_file_info(parent_dir);
 
         std::cout << info.permissions << " " << info.owner << " " << info.size << " " << info.modification_time << " " << info.filename << std::endl;
@@ -172,6 +184,7 @@ int main(int argc, char* argv[]) {
 
         std::string cur_dir = dirs_stack.top();
         dirs_stack.pop();
+        cur_dir.erase(std::unique(cur_dir.begin(), cur_dir.end(), both_slashes()), cur_dir.end());
 
         std::cout << cur_dir + ":" << '\n';
 
