@@ -33,7 +33,10 @@ void command_line_options_t::parse(int ac, char **av) {
             exit(EXIT_SUCCESS);
         }
         A_flag = var_map.count("A_flag");
-        pathname = filenames[0];
+        if (!filenames.size())
+            pathname = ".";
+        else
+            pathname = filenames[0];
         std::cout << "WHAAAAAt " << pathname << std::endl;
         po::notify(var_map);
     } catch (std::exception &ex) {

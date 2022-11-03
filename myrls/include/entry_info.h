@@ -11,7 +11,7 @@ struct file_info {
     std::string owner;
     std::size_t size;
     std::string modification_date;
-    char* modification_time;
+    std::string modification_time;
     std::string filename;
     std::string type;
 };

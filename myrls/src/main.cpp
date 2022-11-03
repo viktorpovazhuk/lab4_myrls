@@ -22,10 +22,6 @@
 #include "options_parser.h"
 #include "entry_info.h"
 
-file_info get_file_info(const std::string &path, const struct stat *stat) {
-    file_info info;
-
-}
 
 std::string get_permissions(const mode_t &st_permissions) {
     std::string permissions;
@@ -56,6 +52,42 @@ std::string get_owner(const uid_t &uid) {
     return owner;
 }
 
+file_info get_file_info(const std::string &path) {
+    struct stat st;
+    char buffer [100];
+    stat(path.c_str(), &st);
+
+    file_info info;
+    info.path = path;
+
+    info.permissions = get_permissions(st.st_mode);
+    info.owner = get_owner(st.st_uid);
+    info.size = st.st_size;
+
+    std::string spec_symb;
+    if (S_ISDIR(st.st_mode))
+        spec_symb = "/";
+    else if ((st.st_mode & S_IEXEC) != 0)
+        spec_symb = "*";
+    else if (S_ISFIFO(st.st_mode))
+        spec_symb = "|";
+    else if (S_ISLNK(st.st_mode))
+        spec_symb = "@";
+    else if (S_ISSOCK(st.st_mode))
+        spec_symb = "=";
+    else if (S_ISREG(st.st_mode))
+        spec_symb = "";
+    else
+        spec_symb = "?";
+    info.filename = spec_symb + std::string(std::filesystem::path(path).filename());
+
+    strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&st.st_mtime));
+    info.modification_time = buffer;
+
+    return info;
+
+}
+
 int main(int argc, char* argv[]) {
     command_line_options_t command_line_options{argc, argv};
     if (argc > 3) {
@@ -69,29 +101,12 @@ int main(int argc, char* argv[]) {
         parent_dir = command_line_options.get_pathname();
 
     if (!std::filesystem::is_directory(parent_dir)) {
-        struct stat entry_stat;
-        int err = stat(parent_dir.c_str(), &entry_stat);
+        file_info info = get_file_info(parent_dir);
 
-        if (err) {
-            perror("stat");
-            return EXIT_FAILURE;
-        }
-
-        file_info info;
-        info.path = parent_dir;
-        info.filename = std::filesystem::path(parent_dir).filename();
-        info.permissions = get_permissions(entry_stat.st_mode);
-        info.owner = get_owner(entry_stat.st_uid);
-        info.size = entry_stat.st_size;
-//        info.modification_time = ctime(&entry_stat.st_mtime);
-        char buffer [80];
-        strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", localtime(&entry_stat.st_mtime));
-        info.modification_time = buffer;
-
-        printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time);
-
+        printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time.c_str());
         return 0;
     }
+    std::cout << parent_dir << std::endl;
 
 
     std::stack<std::string> dirs_stack;
@@ -116,20 +131,15 @@ int main(int argc, char* argv[]) {
 
             struct dirent *entry = entries[i];
             std::string path = cur_dir + "/" + std::string(entry->d_name);
-            struct stat entry_stat{};
-            stat(path.c_str(), &entry_stat);
 
-            file_info info;
-            info.path = path;
-            info.filename = entry->d_name;
-            info.permissions = get_permissions(entry_stat.st_mode);
-            info.owner = get_owner(entry_stat.st_uid);
+
+            file_info info = get_file_info(path);
 
             if (entries[i]->d_type == DT_DIR) {
                 subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
             }
 
-            printf("%s %10s %15s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str());
+            printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time.c_str());
 
             free(entries[i]);
         }
