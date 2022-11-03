@@ -5,7 +5,7 @@
 #include <ftw.h>
 #include <iostream>
 #include <utility>
-#include <boost/property_tree/ptree.hpp>
+//#include <boost/property_tree/ptree.hpp>
 
 
 //class dir_entry {
@@ -48,7 +48,7 @@ int main() {
 
     flags |= FTW_PHYS;
 
-    if (nftw("/home/vivi/Downloads/temp", display_info, 20, flags)
+    if (nftw(".", display_info, 20, flags)
         == -1) {
         perror("nftw");
         exit(EXIT_FAILURE);

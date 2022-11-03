@@ -25,7 +25,7 @@ command_line_options_t::command_line_options_t(int ac, char **av):
 
 void command_line_options_t::parse(int ac, char **av) {
     try {
-        po::parsed_options parsed = po::command_line_parser(ac, av).options(opt_conf).allow_unregistered().run();
+        po::parsed_options parsed = po::command_line_parser(ac, av).options(opt_conf).run();
         po::store(parsed, var_map);
         filenames = po::collect_unrecognized(parsed.options, po::include_positional);
         if (var_map.count("help")) {
@@ -33,6 +33,8 @@ void command_line_options_t::parse(int ac, char **av) {
             exit(EXIT_SUCCESS);
         }
         A_flag = var_map.count("A_flag");
+        pathname = filenames[0];
+        std::cout << "WHAAAAAt " << pathname << std::endl;
         po::notify(var_map);
     } catch (std::exception &ex) {
         throw OptionsParseException(ex.what()); // Convert to our error type
