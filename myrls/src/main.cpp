@@ -14,8 +14,8 @@
 #include <stack>
 #include <libgen.h>
 #include <filesystem>
-#include <time.h>
-#include <stdio.h>
+#include <ctime>
+#include <cstdio>
 
 
 
@@ -69,7 +69,8 @@ std::string get_owner(const uid_t &uid) {
 file_info get_file_info(const std::string &path) {
     struct stat st;
     file_info info;
-    char buffer [100];
+    const size_t buffer_size = 100;
+    char buffer[buffer_size];
 
     if (lstat(path.c_str(), &st) == -1){
         std::cerr << "Error accessing " << path << std::endl;
@@ -91,12 +92,12 @@ file_info get_file_info(const std::string &path) {
         spec_symb = "/";
     else if (S_ISLNK(st.st_mode))
         spec_symb = "@";
+    else if (S_ISSOCK(st.st_mode))
+        spec_symb = "=";
     else if ((st.st_mode & S_IEXEC) != 0)
         spec_symb = "*";
     else if (S_ISFIFO(st.st_mode))
         spec_symb = "|";
-    else if (S_ISSOCK(st.st_mode))
-        spec_symb = "=";
     else if (S_ISREG(st.st_mode))
         spec_symb = "";
     else
@@ -108,10 +109,9 @@ file_info get_file_info(const std::string &path) {
         ssize_t path_len = readlink(path.c_str(), symlink_path, PATH_MAX);
         symlink_path[path_len] = '\0';
         info.filename += std::string(" -> ") + symlink_path;
-        printf("Synlink_path = %s\n", symlink_path);
     }
 
-    strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&st.st_mtime));
+    strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S", localtime(&st.st_mtime));
     info.modification_time = buffer;
 
     return info;
