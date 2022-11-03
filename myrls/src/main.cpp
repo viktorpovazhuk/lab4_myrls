@@ -31,6 +31,12 @@ enum Errors {
 
 };
 
+struct both_slashes {
+    bool operator()(char a, char b) const {
+        return a == '/' && b == '/';
+    }
+};
+
 std::string get_permissions(const mode_t &st_permissions) {
     std::string permissions;
     permissions += (st_permissions & S_IRUSR) ? 'r' : '-';
@@ -142,7 +148,7 @@ int main(int argc, char* argv[]) {
     }
     std::string parent_dir;
     if (argc == 1)
-        parent_dir = ".";
+        parent_dir = "./";
     else
         parent_dir = command_line_options.get_pathname();
 
@@ -155,7 +161,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::stack<std::string> dirs_stack;
-    dirs_stack.push(parent_dir);
+    dirs_stack.push(std::filesystem::path(parent_dir));
 
 
     while (!dirs_stack.empty()) {
@@ -164,6 +170,7 @@ int main(int argc, char* argv[]) {
 
         std::string cur_dir = dirs_stack.top();
         dirs_stack.pop();
+        cur_dir.erase(std::unique(cur_dir.begin(), cur_dir.end(), both_slashes()), cur_dir.end());
 
         std::cout << cur_dir + ":" << '\n';
 
@@ -196,7 +203,7 @@ int main(int argc, char* argv[]) {
 
 
             if (entries[i]->d_type == DT_DIR) {
-                subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
+                subdirs.emplace_back(std::filesystem::path(cur_dir + "/" + std::string(entries[i]->d_name)));
             }
 
 
