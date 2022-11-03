@@ -60,6 +60,7 @@ add_executable(${PROJECT_NAME} myrls/src/main.cpp
         myrls/include/entry_info.h)
 
 add_executable(nftw_ex examples/nftw_ex.cpp)
+add_executable(scandir_ex examples/scandir_ex.cpp)
 
 #! Put path to your project headers
 target_include_directories(${PROJECT_NAME} PRIVATE myrls/include)

@@ -1,7 +1,3 @@
-//
-// Created by vivi on 29.10.22.
-//
-
 #ifndef MYRLS_FILE_INFO_H
 #define MYRLS_FILE_INFO_H
 

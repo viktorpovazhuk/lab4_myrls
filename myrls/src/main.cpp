@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdlib>
 #include <pwd.h>
 #include <string>
 #include <dirent.h>
@@ -59,7 +60,7 @@ int main(int argc, char* argv[]) {
     command_line_options_t command_line_options{argc, argv};
     if (argc > 3) {
         std::cerr << "Too much parameters" << std::endl;
-        exit(1);
+        return EXIT_FAILURE;
     }
     std::string parent_dir;
     if (argc == 1)
@@ -68,11 +69,13 @@ int main(int argc, char* argv[]) {
         parent_dir = command_line_options.get_pathname();
 
     if (!std::filesystem::is_directory(parent_dir)) {
-//        std::cout << "!!!" << std::endl;
         struct stat entry_stat;
-        stat(parent_dir.c_str(), &entry_stat);
+        int err = stat(parent_dir.c_str(), &entry_stat);
 
-        std::cout << "EHEHEHEHEHEH" << parent_dir << "!!!"  << std::endl;
+        if (err) {
+            perror("stat");
+            return EXIT_FAILURE;
+        }
 
         file_info info;
         info.path = parent_dir;
@@ -84,13 +87,10 @@ int main(int argc, char* argv[]) {
         char buffer [80];
         strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", localtime(&entry_stat.st_mtime));
         info.modification_time = buffer;
-//        free(buffer);
+
         printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time);
-//        }
-//        else {
-//            std::cerr << "Some err " << errno << std::endl;
-//        }
-        exit(0);
+
+        return 0;
     }
 
 
