@@ -89,8 +89,9 @@ file_info get_file_info(const std::string &path) {
 }
 
 int main(int argc, char* argv[]) {
+    std::cout << argc << " !!!! " << std::endl;
     command_line_options_t command_line_options{argc, argv};
-    if (argc > 3) {
+    if (argc > 2) {
         std::cerr << "Too much parameters" << std::endl;
         return EXIT_FAILURE;
     }

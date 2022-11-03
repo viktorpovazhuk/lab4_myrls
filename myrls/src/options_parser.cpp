@@ -37,6 +37,7 @@ void command_line_options_t::parse(int ac, char **av) {
             pathname = ".";
         else
             pathname = filenames[0];
+        assert_file_exist(pathname);
         po::notify(var_map);
     } catch (std::exception &ex) {
         throw OptionsParseException(ex.what()); // Convert to our error type
@@ -45,6 +46,8 @@ void command_line_options_t::parse(int ac, char **av) {
 
 void assert_file_exist(const std::string &f_name) {
     if (!std::filesystem::exists(f_name)) {
-        throw std::invalid_argument("File " + f_name + " not found!");
+        std::cerr <<"File " << f_name << "not found!" << std::endl;
+        exit(EXIT_FAILURE);
     }
+
 }
