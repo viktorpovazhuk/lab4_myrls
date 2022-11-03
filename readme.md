@@ -1,44 +1,72 @@
-<mark>Template for your README. Remove all unused parts and instructions</mark>
+# Lab work: Recursive directory listing
+Authors (team): <a href="https://github.com/bogdanmagometa">Bohdan Mahometa</a>,
+<a href="https://github.com/viktorpovazhuk">Viktor Povazhuk</a>,
+<a href="https://github.com/shevdan">Bohdan Shevchuk</a>
+<br>
 
-# Lab work <mark>NUMBER</mark>: <mark>SHORT TOPIC</mark>
-Authors (team): <mark>AUTHORS WITH GITHUB LINKS</mark><br>
-Variant: <mark>VARIANT SHOULD BE HERE</mark>
+Currently, the project has been seen to work on Linux and MacOS.
+
 ## Prerequisites
 
-<mark>LIST LIBRARIES/TOOLS/OTHER UTILITIES THAT NEED TO BE INSTALLED (E.G. GCC, OPENMP, CMAKE ETC)</mark>
+Tools:
+- cmake, GCC
+
+Libraries:
+- boost collection (`program_options` library is used in the project)
 
 ### Compilation
 
-<mark>HOW TO COMPILE YOUR PROGRAM? (RECOMMENDED: ./comile.sh)</mark>
+#### Compile with `./compile.sh`
+
+Execute the following command in the project root directory:
+```bash
+$ ./compile.sh
+```
+
+The executable will be built and copied to `./bin/myrls`.
+
+#### Compile manually with cmake
+
+Run the following in the project root directory:
+```bash
+$ mkdir build
+$ cmake -S . -B build
+$ cmake --build build
+```
+
+The executable will be available by the path `./build/myrls`.
 
 ### Installation
 
-<mark>DESCRIBE THE INSTALLATION PROCESS (USE ./dependencies FOLDER)</mark>
-
-<mark>Note: For Python scripts, You must add `requirenments.txt` 
-file and add your env to the `.gitignore` file!</mark>
+Assuming `./build` is the directory with compiled `myrls` and `./install` is the install directory:
+```bash
+$ cp ./build/myrls ./install/myrls
+```
 
 ### Usage
 
-<mark>PROVIDE AN EXAMPLE OF HOW TO RUN YOUR PROGRAM (IT CAN BE A_flag COMMAND LINE WITH INPUT AND EXPECTED OUTPUT)</mark>
+Assuming the `myrls` executable is available by the path `./bin/myrls`:
+```bash
+$ ./bin/myrls ./myrls
+./myrls:
+rwxrwxr-x bohdan 4096 2022-11-03 15:56:23 /include
+rwxrwxr-x bohdan 4096 2022-11-03 16:48:11 /src
 
-<mark>Note: if your project needs or generates any data, media and so on -- put them
-into the data folder</mark> 
+./myrls/include:
+rw-rw-r-- bohdan  378 2022-11-03 15:56:23 entry_info.h
+rw-rw-r-- bohdan 1407 2022-11-03 13:00:49 options_parser.h
+
+./myrls/src:
+rw-rw-r-- bohdan 6352 2022-11-03 16:48:11 main.cpp
+rw-rw-r-- bohdan 1661 2022-11-03 15:56:23 options_parser.cpp
+```
 
 ### Important!
 
-<mark>WHAT ELSE SHOULD WE KNOW ABOUT YOUR WORK? (E.G. KNOWN ISSUES, BUGS, SPECIAL BEHAVIOR ETC)</mark>
-
 ### Results
 
-<mark>DESCRIBE THE RESULTS OF THE WORK YOU DID. WHAT DID YOU LEARN OR FIND INTERESTING?</mark>
+We implemented recursive directory listing command.
 
 # Additional tasks
-<mark>IF APPLICABLE, LIST ALL THE EXTRA FEATURES YOU ADDED. PROVIDE DETAILS<mark>
 
-# ATTENTION!
-  
-Additional tasks not listed in the previous paragraph would not be graded.
-
-Be sure to provide a complete list of authors.
-
+Not yet.
