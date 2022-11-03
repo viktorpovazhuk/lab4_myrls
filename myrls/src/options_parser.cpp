@@ -37,7 +37,6 @@ void command_line_options_t::parse(int ac, char **av) {
             pathname = ".";
         else
             pathname = filenames[0];
-        std::cout << "WHAAAAAt " << pathname << std::endl;
         po::notify(var_map);
     } catch (std::exception &ex) {
         throw OptionsParseException(ex.what()); // Convert to our error type

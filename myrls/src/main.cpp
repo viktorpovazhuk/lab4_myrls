@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 
         file_info info = get_file_info(parent_dir);
 
-        printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time.c_str());
+        std::cout << info.permissions << " " << info.owner << " " << info.size << " " << info.modification_time << " " << info.filename << std::endl;
         exit(0);
     }
     std::cout << parent_dir << std::endl;
@@ -112,6 +112,7 @@ int main(int argc, char* argv[]) {
 
     std::stack<std::string> dirs_stack;
     dirs_stack.push(parent_dir);
+
 
     while (!dirs_stack.empty()) {
         struct dirent **entries;
@@ -125,6 +126,9 @@ int main(int argc, char* argv[]) {
         num_entries = scandir(cur_dir.c_str(), &entries, nullptr, alphasort);
 
         std::vector<std::string> subdirs;
+
+        std::vector<file_info> dir_info;
+        int  max_file_size = 0;
         for (int i = 0; i < num_entries; i++) {
             if (!strcmp(entries[i]->d_name, ".") or !strcmp(entries[i]->d_name, "..")) {
                 continue;
@@ -133,16 +137,21 @@ int main(int argc, char* argv[]) {
             struct dirent *entry = entries[i];
             std::string path = cur_dir + "/" + std::string(entry->d_name);
 
-
             file_info info = get_file_info(path);
+            dir_info.push_back(info);
+            max_file_size = fmax( std::to_string(info.size).size(), max_file_size);
+
+
 
             if (entries[i]->d_type == DT_DIR) {
                 subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
             }
 
-            printf("%s %10s %15s %lu %s\n", info.permissions.c_str(), info.owner.c_str(), info.filename.c_str(), info.size, info.modification_time.c_str());
 
             free(entries[i]);
+        }
+        for (auto & info : dir_info) {
+            std::cout << info.permissions << " " << info.owner << " " << std::string(" ", max_file_size -  std::to_string(info.size).size()) << info.size << " " << info.modification_time << " " << info.filename << std::endl;
         }
         free(entries);
 
