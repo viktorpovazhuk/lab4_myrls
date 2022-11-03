@@ -101,7 +101,7 @@ file_info get_file_info(const std::string &path) {
         spec_symb = "";
     else
         spec_symb = "?";
-    info.filename = spec_symb + std::string(std::filesystem::path(path).filename());
+    info.filename = spec_symb + std::string(basename(strdup(path.c_str())));
 
     strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&st.st_mtime));
     info.modification_time = buffer;
@@ -152,7 +152,13 @@ int main(int argc, char* argv[]) {
     else
         parent_dir = command_line_options.get_pathname();
 
-    if (!std::filesystem::is_directory(parent_dir)) {
+    struct stat st;
+    if (stat(parent_dir.c_str(), &st) == -1){
+        std::cerr << "Error accessing initial path " << parent_dir << std::endl;
+        EXIT_CODE = EWRPATH;
+        return EXIT_CODE;
+    }
+    if (!S_ISDIR(st.st_mode)) {
         file_info info = get_file_info(parent_dir);
 
         std::cout << info.permissions << " " << info.owner << " " << info.size << " " << info.modification_time << " " << info.filename << std::endl;
@@ -161,7 +167,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::stack<std::string> dirs_stack;
-    dirs_stack.push(std::filesystem::path(parent_dir));
+    dirs_stack.push(parent_dir);
 
 
     while (!dirs_stack.empty()) {
@@ -203,7 +209,7 @@ int main(int argc, char* argv[]) {
 
 
             if (entries[i]->d_type == DT_DIR) {
-                subdirs.emplace_back(std::filesystem::path(cur_dir + "/" + std::string(entries[i]->d_name)));
+                subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
             }
 
 
