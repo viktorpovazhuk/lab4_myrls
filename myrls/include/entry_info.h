@@ -14,6 +14,7 @@ struct file_info {
     std::string modification_time;
     std::string filename;
     std::string type;
+    bool err = false;
 };
 
 #endif //MYRLS_FILE_INFO_H

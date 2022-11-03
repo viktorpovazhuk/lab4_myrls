@@ -22,6 +22,14 @@
 #include "options_parser.h"
 #include "entry_info.h"
 
+int EXIT_CODE = 0;
+
+enum Errors {
+    EDIR = 25,
+    EFILE = 26,
+    EWRPATH = 27,
+
+};
 
 std::string get_permissions(const mode_t &st_permissions) {
     std::string permissions;
@@ -54,10 +62,18 @@ std::string get_owner(const uid_t &uid) {
 
 file_info get_file_info(const std::string &path) {
     struct stat st;
-    char buffer [100];
-    stat(path.c_str(), &st);
-
     file_info info;
+    char buffer [100];
+
+    if (stat(path.c_str(), &st) == -1){
+        std::cerr << "Error accessing " << path << std::endl;
+        EXIT_CODE = EFILE;
+        info.err = true;
+        return info;
+    }
+
+
+
     info.path = path;
 
     info.permissions = get_permissions(st.st_mode);
@@ -119,7 +135,6 @@ int custom_comparator(const struct dirent **d1, const struct dirent **d2) {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << argc << " !!!! " << std::endl;
     command_line_options_t command_line_options{argc, argv};
     if (argc > 2) {
         std::cerr << "Too much parameters" << std::endl;
@@ -138,8 +153,6 @@ int main(int argc, char* argv[]) {
         return 0;
 
     }
-    std::cout << parent_dir << std::endl;
-
 
     std::stack<std::string> dirs_stack;
     dirs_stack.push(parent_dir);
@@ -156,6 +169,12 @@ int main(int argc, char* argv[]) {
 
         num_entries = scandir(cur_dir.c_str(), &entries, nullptr, custom_comparator);
 
+        if (num_entries < 0) {
+            std::cerr << "Error opening " << cur_dir << std::endl;
+            EXIT_CODE = EDIR;
+            continue;
+        }
+
         std::vector<std::string> subdirs;
 
         std::vector<file_info> dir_info;
@@ -169,6 +188,8 @@ int main(int argc, char* argv[]) {
             std::string path = cur_dir + "/" + std::string(entry->d_name);
 
             file_info info = get_file_info(path);
+            if (info.err)
+                continue;
             dir_info.push_back(info);
             max_file_size = fmax( std::to_string(info.size).size(), max_file_size);
 
@@ -182,7 +203,7 @@ int main(int argc, char* argv[]) {
             free(entries[i]);
         }
         for (auto & info : dir_info) {
-            std::cout << info.permissions << " " << info.owner << " " << std::string(" ", max_file_size -  std::to_string(info.size).size()) << info.size << " " << info.modification_time << " " << info.filename << std::endl;
+            std::cout << info.permissions << " " << info.owner << " " << std::string( max_file_size -  std::to_string(info.size).size(), ' ') << info.size << " " << info.modification_time << " " << info.filename << std::endl;
         }
         free(entries);
 
@@ -193,5 +214,5 @@ int main(int argc, char* argv[]) {
         std::cout << '\n';
     }
 
-    return 0;
+    return EXIT_CODE;
 }
