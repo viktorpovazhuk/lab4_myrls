@@ -65,7 +65,7 @@ file_info get_file_info(const std::string &path) {
     file_info info;
     char buffer [100];
 
-    if (stat(path.c_str(), &st) == -1){
+    if (lstat(path.c_str(), &st) == -1){
         std::cerr << "Error accessing " << path << std::endl;
         EXIT_CODE = EFILE;
         info.err = true;
@@ -83,12 +83,12 @@ file_info get_file_info(const std::string &path) {
     std::string spec_symb;
     if (S_ISDIR(st.st_mode))
         spec_symb = "/";
+    else if (S_ISLNK(st.st_mode))
+        spec_symb = "@";
     else if ((st.st_mode & S_IEXEC) != 0)
         spec_symb = "*";
     else if (S_ISFIFO(st.st_mode))
         spec_symb = "|";
-    else if (S_ISLNK(st.st_mode))
-        spec_symb = "@";
     else if (S_ISSOCK(st.st_mode))
         spec_symb = "=";
     else if (S_ISREG(st.st_mode))
@@ -96,6 +96,14 @@ file_info get_file_info(const std::string &path) {
     else
         spec_symb = "?";
     info.filename = spec_symb + std::string(std::filesystem::path(path).filename());
+
+    if (spec_symb == "@") {
+        char symlink_path[PATH_MAX];
+        ssize_t path_len = readlink(path.c_str(), symlink_path, PATH_MAX);
+        symlink_path[path_len] = '\0';
+        info.filename += std::string(" -> ") + symlink_path;
+        printf("Synlink_path = %s\n", symlink_path);
+    }
 
     strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&st.st_mtime));
     info.modification_time = buffer;
@@ -203,7 +211,7 @@ int main(int argc, char* argv[]) {
             free(entries[i]);
         }
         for (auto & info : dir_info) {
-            std::cout << info.permissions << " " << info.owner << " " << std::string( max_file_size -  std::to_string(info.size).size(), ' ') << info.size << " " << info.modification_time << " " << info.filename << std::endl;
+            std::cout << info.permissions << " " << info.owner << " " << std::string(max_file_size -  std::to_string(info.size).size(), ' ') << info.size << " " << info.modification_time << " " << info.filename << std::endl;
         }
         free(entries);
 
