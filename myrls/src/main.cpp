@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdlib>
 #include <pwd.h>
 #include <string>
 #include <dirent.h>
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]) {
     command_line_options_t command_line_options{argc, argv};
     if (argc > 3) {
         std::cerr << "Too much parameters" << std::endl;
-        exit(1);
+        return EXIT_FAILURE;
     }
     std::string parent_dir;
     if (argc == 1)
@@ -100,12 +101,11 @@ int main(int argc, char* argv[]) {
         parent_dir = command_line_options.get_pathname();
 
     if (!std::filesystem::is_directory(parent_dir)) {
-
-
         file_info info = get_file_info(parent_dir);
 
         std::cout << info.permissions << " " << info.owner << " " << info.size << " " << info.modification_time << " " << info.filename << std::endl;
-        exit(0);
+        return 0;
+
     }
     std::cout << parent_dir << std::endl;
 
