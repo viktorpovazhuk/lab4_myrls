@@ -88,6 +88,36 @@ file_info get_file_info(const std::string &path) {
 
 }
 
+char switch_case(char c) {
+    if (isupper(c)) {
+        return tolower(c);
+    }
+    return toupper(c);
+}
+
+int custom_comparator(const struct dirent **d1, const struct dirent **d2) {
+    const char *name1 = (*d1)->d_name;
+    const char *name2 = (*d2)->d_name;
+
+    while (*name1 != '\0' && *name2 != '\0') {
+        char switched1 = switch_case(*name1);
+        char switched2 = switch_case(*name2);
+        if (switched1 < switched2) {
+            return -1;
+        }
+        if (switched1 > switched2) {
+            return 1;
+        }
+        ++name1, ++name2;
+    }
+
+    if (*name2) {
+        return -1;
+    }
+
+    return *name1;
+}
+
 int main(int argc, char* argv[]) {
     std::cout << argc << " !!!! " << std::endl;
     command_line_options_t command_line_options{argc, argv};
@@ -124,7 +154,7 @@ int main(int argc, char* argv[]) {
 
         std::cout << cur_dir + ":" << '\n';
 
-        num_entries = scandir(cur_dir.c_str(), &entries, nullptr, alphasort);
+        num_entries = scandir(cur_dir.c_str(), &entries, nullptr, custom_comparator);
 
         std::vector<std::string> subdirs;
 
