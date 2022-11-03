@@ -59,6 +59,8 @@ add_executable(${PROJECT_NAME} myrls/src/main.cpp
         myrls/src/options_parser.cpp myrls/include/options_parser.h
         myrls/include/entry_info.h)
 
+#target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
 add_executable(nftw_ex examples/nftw_ex.cpp)
 add_executable(scandir_ex examples/scandir_ex.cpp)
 

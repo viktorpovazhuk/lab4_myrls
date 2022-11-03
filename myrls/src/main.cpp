@@ -17,8 +17,6 @@
 #include <ctime>
 #include <cstdio>
 
-
-
 #include "options_parser.h"
 #include "entry_info.h"
 
@@ -28,7 +26,7 @@ enum Errors {
     EDIR = 25,
     EFILE = 26,
     EWRPATH = 27,
-
+    EPARAMETERS = 28
 };
 
 struct both_slashes {
@@ -152,7 +150,7 @@ int main(int argc, char* argv[]) {
     command_line_options_t command_line_options{argc, argv};
     if (argc > 2) {
         std::cerr << "Too much parameters" << std::endl;
-        return EXIT_FAILURE;
+        return EPARAMETERS;
     }
     std::string parent_dir;
     if (argc == 1)
@@ -161,8 +159,8 @@ int main(int argc, char* argv[]) {
         parent_dir = command_line_options.get_pathname();
 
     struct stat st;
-    if (stat(parent_dir.c_str(), &st) == -1){
-        std::cerr << "Error accessing initial path " << parent_dir << std::endl;
+    if (lstat(parent_dir.c_str(), &st)){
+        perror("Error accessing initial file");
         EXIT_CODE = EWRPATH;
         return EXIT_CODE;
     }
@@ -186,12 +184,13 @@ int main(int argc, char* argv[]) {
         dirs_stack.pop();
         cur_dir.erase(std::unique(cur_dir.begin(), cur_dir.end(), both_slashes()), cur_dir.end());
 
-        std::cout << cur_dir + ":" << '\n';
+        std::cout << cur_dir + ":" << std::endl;
 
         num_entries = scandir(cur_dir.c_str(), &entries, nullptr, custom_comparator);
 
         if (num_entries < 0) {
-            std::cerr << "Error opening " << cur_dir << std::endl;
+            perror(("Error opening " + cur_dir).c_str());
+            std::cerr << std::endl;
             EXIT_CODE = EDIR;
             continue;
         }
@@ -199,7 +198,8 @@ int main(int argc, char* argv[]) {
         std::vector<std::string> subdirs;
 
         std::vector<file_info> dir_info;
-        int  max_file_size = 0;
+        int max_file_size = 0;
+        int max_owner_size = 0;
         for (int i = 0; i < num_entries; i++) {
             if (!strcmp(entries[i]->d_name, ".") or !strcmp(entries[i]->d_name, "..")) {
                 continue;
@@ -213,26 +213,28 @@ int main(int argc, char* argv[]) {
                 continue;
             dir_info.push_back(info);
             max_file_size = fmax( std::to_string(info.size).size(), max_file_size);
-
-
+            max_owner_size = fmax( info.owner.size(), max_owner_size);
 
             if (entries[i]->d_type == DT_DIR) {
                 subdirs.emplace_back(cur_dir + "/" + std::string(entries[i]->d_name));
             }
 
-
             free(entries[i]);
         }
         for (auto & info : dir_info) {
-            std::cout << info.permissions << " " << info.owner << " " << std::string(max_file_size -  std::to_string(info.size).size(), ' ') << info.size << " " << info.modification_time << " " << info.filename << std::endl;
+            std::cout << info.permissions << " "
+                    << std::string(max_owner_size - info.owner.size(), ' ') << info.owner << " "
+                    << std::string(max_file_size -  std::to_string(info.size).size(), ' ') << info.size << "  "
+                    << info.modification_time << "  "
+                    << info.filename << '\n';
         }
         free(entries);
 
-        for (int i = subdirs.size() - 1; i >= 0; i--) {
-            dirs_stack.push(subdirs[i]);
+        for (size_t i = subdirs.size(); i > 0; i--) {
+            dirs_stack.push(subdirs[i - 1]);
         }
 
-        std::cout << '\n';
+        std::cout << std::endl;
     }
 
     return EXIT_CODE;
